@@ -25,8 +25,7 @@
  
 ## 运行
     ```
-        pip install -r requirements.txt
-        python main.py
+        pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
     ```
     即可
 
@@ -35,9 +34,9 @@
 
 中间结果
 
-<img src="middle.png" align="center">
+<img src="训练输出.png" align="center">
 
 
 预测结果
 
-<img src="result.png" align="center">
+<img src="正确率.png" align="center">
