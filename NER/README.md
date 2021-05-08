@@ -18,9 +18,8 @@
     依赖
     
  
-## 运行
+## 运行命令安装依赖包
     ```
-        pip install -r requirements.txt
-        python main.py
+        pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
     ```
-    即可
+    

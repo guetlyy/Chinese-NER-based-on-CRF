@@ -7,7 +7,7 @@
 """
 
 import sklearn_crfsuite
-from sklearn.externals import joblib
+import joblib
 from sklearn_crfsuite import metrics
 
 from corpus import get_corpus
@@ -45,10 +45,11 @@ class NerModel(object):
         y_predict = self.model.predict(x_fix)
         print("-> 调整模型")
         metrics.flat_f1_score(y_fix, y_predict, average='weighted', labels=labels)
-        # sorted_labels = sorted(labels, key=lambda name: (name[1:], name[0]))
+        sorted_labels = sorted(labels, key=lambda name: (name[1:], name[0]))
         # print(metrics.flat_classification_report(y_fix, y_predict, labels=sorted_labels, digits=3))
         print("-> 完成模型训练")
         self.save_model()
+        return y_fix, y_predict, sorted_labels
 
     def save_model(self, name="model"):
         model_path = model_config.get("model_path").format(name)
@@ -87,8 +88,54 @@ class NerModel(object):
         if len(entity_list) > 0 and entity_list[0][1] == '':
             entity_list.pop(0)
         obj = deal_with_entity(entity_list, x, section_flag)
-        return obj
+        return obj, x, y_predict
 
     def load_model(self, model_name="model"):
         model_path = model_config.get("model_path").format(model_name)
         joblib.load(model_path)
+
+
+class LoadModelPredict(object):
+
+    def __init__(self):
+        self.corpus = get_corpus()
+        # self.corpus.initialize()
+        self.model = None
+
+    def predict(self, sentence, section_flag):
+        self.model = self.load_model()
+        x = q_2_b(sentence)
+        word_lists = [['<BOS>'] + [c for c in x] + ['<EOS>']]
+        word_grams = [self.corpus.segment_by_window(word_list) for word_list in word_lists]
+        features = self.corpus.feature_extractor(word_grams)
+        y_predict = self.model.predict(features)
+        entity = ''
+        entity_list = []
+        tag = ""
+        entity_tag = ["B_PER", "B_LOC", "B_ORG", "B_T", "I_LOC", "I_PER", "I_ORG", "I_T"]
+        for index in range(len(y_predict[0])):
+            if y_predict[0][index] == '0':
+                if index == 0:
+                    continue
+                elif index > 0 and y_predict[0][index - 1] != '0' and x[index] == x[index - 1]:
+                    tag = y_predict[0][index - 1][2:]
+                    entity += x[index]
+            else:
+                if index == 0:
+                    entity += x[index]
+                elif index > 0 and y_predict[0][index][-1] == y_predict[0][index - 1][-1]:
+                    entity += x[index]
+                    tag = y_predict[0][index][2:]
+                elif index > 0 and y_predict[0][index][-1] != y_predict[0][index - 1][-1]:
+                    entity_list.append((entity, tag))
+                    entity = ''
+                    tag = ''
+                    entity += x[index]
+        if len(entity_list) > 0 and entity_list[0][1] == '':
+            entity_list.pop(0)
+        obj = deal_with_entity(entity_list, x, section_flag)
+        return obj, x, y_predict
+
+    def load_model(self, model_name="model"):
+        model_path = model_config.get("model_path").format(model_name)
+        return joblib.load(model_path)

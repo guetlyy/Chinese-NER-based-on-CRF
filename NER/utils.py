@@ -7,6 +7,13 @@
 """
 import re
 
+# 定义训练标志
+_is_train = (
+    ("train", True),
+)
+
+is_train = dict(_is_train)
+
 # 定义测试集section名的映射
 document = "文书"
 
@@ -28,7 +35,7 @@ entity = "实体"
 
 _entity_map = (
     ("BIR", "出生信息"),
-    ("NAT", "名族"),
+    ("NAT", "民族"),
     ("LOC", "居住地"),
     ("SEX", "性别"),
     ("HJ", "户籍"),
